@@ -45,7 +45,10 @@ async def on_message(message):
     if nickname is None:
         nickname = 'DGP_Auth'
     if re.match('.*'+nickname+'(ちゃん|ちゃーん|さん|さーん|くん|くーん).*', message.content):
-        if '文字数判定お願い' in message.content:
+        if 'どっち？' in message.content:
+            await client.send_message(message.channel, 'Pythonで動いてるよ～')
+            return
+        elif '文字数判定お願い' in message.content:
             countdict[message.server.id] = 0
             users = u'文字数が規定を越していないのは \r\n ```'
             count = 0
@@ -54,14 +57,19 @@ async def on_message(message):
                     continue
                 if user.id == 190468887593222144:
                     continue
-                print("test2")
-                print(is_AuthOther(message.server, user))
-                if is_AuthOther(message.server, user):
+                if await is_AuthOther(message.server, user) < 30:
                     print("test3")
                     users += user.name + ' '
                     count += 1
             users += '``` \r\n以上'+str(count)+' 名になります。'
-            #await client.send_message(message.channel, users)
+            await client.send_message(message.channel, users)
+            return
+        elif 'お疲れ様' in message.content:
+            if message.author.id == '190468887593222144':
+                await client.send_message(message.channel, 'お疲れ～、またね～ \r\n(判定プログラムを終了しました)')
+                await client.logout()
+                return
+            await client.send_message(message.channel, 'お疲れ～')
             return
         if message.server.id in countdict:
             i = countdict[message.server.id]
@@ -86,18 +94,17 @@ def getEmoji(server, name):
         if emoji.name == name:
             return '<:'+name+':'+emoji.id+'>'
     return None
-    
-def is_AuthOther(server, user):
-    print("test")
+
+async def is_AuthOther(server, user):
     counts = 0
-    for message in client.logs_from(server.get_channel(190495358843879428), limit=500):
-        print("test")
-        print(message)
+    channel = server.get_channel('190495358843879428')
+    async for message in client.logs_from(channel):
+        if message is None:
+            break
         if message.author.id != user.id:
             continue
         msg = message.content.replace('\r\n', '').replace('\r', '').replace('\n', '') .replace(' ', '').replace('　', '')
         counts += len(msg)
-        print(counts)
     return counts
 
 client.run("token")
